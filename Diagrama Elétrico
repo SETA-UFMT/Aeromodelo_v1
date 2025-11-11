@@ -1,0 +1,517 @@
+# Diagrama de Ligações Elétricas - AeroFlyControl v1
+
+## 🔌 Análise Completa do Circuito Elétrico
+
+Com base nas especificações dos componentes, o diagrama detalhado de todas as conexões elétricas do sistema.
+
+---
+
+## 📐 Arquitetura do Sistema
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    BATERIA LiPo 3S 11.1V                    │
+│                      (2200mAh, 3 células)                   │
+│                                                             │
+│         (+) 11.1V ────┬──────────────────────────┐         │
+│         (-) GND ──────┼──────────────────────────┼─────    │
+└───────────────────────┼──────────────────────────┼─────────┘
+                        │                          │
+                        │                          │
+                   ┌────▼────┐              ┌──────▼──────┐
+                   │ ESC 40A │              │  FS-iA6B    │
+                   │         │              │  Receptor   │
+                   │ BEC 5V  │◄─────────────│  (4-6.5V)   │
+                   │ 3A      │   Sinal PWM  │             │
+                   └────┬────┘              └──────┬──────┘
+                        │                          │
+                  ┌─────▼─────┐                    │
+                  │Motor BLDC │              ┌─────▼─────────┐
+                  │ A2212/6T  │              │ Distribuição  │
+                  │ 3 fios    │              │ de Sinais     │
+                  └───────────┘              └───┬───┬───┬───┘
+                                                 │   │   │
+                                    ┌────────────┘   │   └────────────┐
+                                    │                │                │
+                              ┌─────▼─────┐   ┌─────▼─────┐   ┌──────▼──────┐
+                              │ Servo 9g  │   │ Servo 9g  │   │  Servo 9g   │
+                              │ Aileron 1 │   │ Aileron 2 │   │  Profundor  │
+                              │ (CH1)     │   │ (CH2)     │   │  (CH4)      │
+                              └───────────┘   └───────────┘   └─────────────┘
+```
+
+---
+
+## 🔋 1. Circuito de Alimentação Principal
+
+### Bateria LiPo → ESC
+
+```
+Bateria LiPo 3S (11.1V)
+    │
+    ├─── Fio Vermelho (+) ──→ ESC Entrada (+) [16AWG, 100mm]
+    │
+    └─── Fio Preto (-) ─────→ ESC Entrada (-)  [16AWG, 100mm]
+
+Conector: Plugue T (Deans)
+```
+
+**Especificações:**
+- **Tensão:** 11.1V nominal (9.0V-12.6V range)
+- **Corrente máxima:** 40A contínua / 55A pico
+- **Cabos:** 16AWG (vermelho/preto)
+- **Comprimento:** 100mm
+
+---
+
+## ⚡ 2. Sistema de Propulsão
+
+### ESC → Motor BLDC
+
+```
+ESC (Saída para Motor)
+    │
+    ├─── Fio Azul 1 ──→ Motor Fase A [16AWG, 75mm]
+    ├─── Fio Azul 2 ──→ Motor Fase B [16AWG, 75mm]
+    └─── Fio Azul 3 ──→ Motor Fase C [16AWG, 75mm]
+
+Conector: Banana 3.5mm (fêmea) no ESC
+```
+
+**Especificações:**
+- **3 fios azuis** (sistema trifásico)
+- **Cabo:** 16AWG
+- **Comprimento:** 75mm cada
+- **Corrente:** Até 22A
+
+---
+
+## 🔌 3. Sistema BEC (Battery Eliminator Circuit)
+
+### ESC BEC → Receptor
+
+```
+ESC (BEC Linear 5V/3A)
+    │
+    ├─── Fio Vermelho (+5V) ──→ Receptor Alimentação (+)
+    ├─── Fio Preto (GND) ─────→ Receptor GND
+    └─── Fio Branco (PWM) ────→ Receptor Canal 3 (Throttle)
+
+Conector: Servo padrão 3 pinos (macho)
+```
+
+**Especificações:**
+- **Tensão de saída:** 5V regulada
+- **Corrente máxima:** 3A
+- **Tipo:** Linear (não switching)
+- **Conector:** Padrão servo (Futaba/JR)
+
+**Distribuição de corrente do BEC:**
+- Receptor FS-iA6B: ~50mA
+- Controlador A3v2: ~100mA
+- 3x Servos 9g: ~500mA cada (em movimento) = 1.5A
+- **Total máximo:** ~2A (dentro do limite de 3A)
+
+---
+
+## 📡 4. Sistema de Controle - Receptor
+
+### Receptor FS-iA6B (Pinagem)
+
+```
+┌─────────────────────────────────────┐
+│     Flysky FS-iA6B Receptor         │
+├─────────────────────────────────────┤
+│ Alimentação                         │
+│  • VCC: 4.0-6.5V (via BEC 5V)      │
+│  • GND: Terra comum                 │
+├─────────────────────────────────────┤
+│ Canais (Conectores servo 3 pinos)  │
+│  • CH1: Aileron Direito             │
+│  • CH2: Profundor                   │
+│  • CH3: Throttle (ESC)              │
+│  • CH4: Aileron Esquerdo            │
+│  • CH5: Aux 1 (modo voo A3v2)       │
+│  • CH6: Aux 2 (ganho A3v2)          │
+├─────────────────────────────────────┤
+│ Interfaces Especiais                │
+│  • i-Bus (porta dedicada)           │
+│  • PPM (compartilhado com CH1)      │
+└─────────────────────────────────────┘
+```
+
+### Pinagem de cada canal (padrão servo):
+
+```
+┌───┬───┬───┐
+│ S │ + │ - │  (visto de frente)
+└───┴───┴───┘
+ │   │   │
+ │   │   └─── GND (Preto/Marrom)
+ │   └─────── VCC +5V (Vermelho)
+ └─────────── Sinal PWM (Branco/Amarelo/Laranja)
+```
+
+---
+
+## 🎮 5. Conexões dos Servos
+
+### Servo 9g - Especificações de fiação
+
+Cada servo possui **3 fios:**
+
+```
+┌─────────────────────┐
+│    Servo 9g         │
+├─────────────────────┤
+│ Fio Marrom → GND    │
+│ Fio Vermelho → +5V  │
+│ Fio Laranja → PWM   │
+└─────────────────────┘
+```
+
+### Conexão 1: Aileron Direito
+
+```
+Servo 1 (Aileron Direito)
+    │
+    ├─── Marrom (GND) ──→ Receptor CH1 (-)
+    ├─── Vermelho (+5V) ─→ Receptor CH1 (+)
+    └─── Laranja (PWM) ──→ Receptor CH1 (S)
+
+Localização: Asa direita
+Função: Controle de rolagem (roll)
+Viagem: 1520±500μs (via A3v2)
+```
+
+### Conexão 2: Aileron Esquerdo
+
+```
+Servo 2 (Aileron Esquerdo)
+    │
+    ├─── Marrom (GND) ──→ Receptor CH4 (-)
+    ├─── Vermelho (+5V) ─→ Receptor CH4 (+)
+    └─── Laranja (PWM) ──→ Receptor CH4 (S)
+
+Localização: Asa esquerda
+Função: Controle de rolagem (roll)
+Viagem: 1520±500μs (via A3v2)
+```
+
+### Conexão 3: Profundor
+
+```
+Servo 3 (Profundor/Elevator)
+    │
+    ├─── Marrom (GND) ──→ Receptor CH2 (-)
+    ├─── Vermelho (+5V) ─→ Receptor CH2 (+)
+    └─── Laranja (PWM) ──→ Receptor CH2 (S)
+
+Localização: Cauda (estabilizador horizontal)
+Função: Controle de arfagem (pitch)
+Viagem: 1520±500μs (via A3v2)
+```
+
+**Parâmetros PWM dos Servos:**
+- **Frequência:** 50Hz, 125Hz ou 250Hz (configurável no A3v2)
+- **Pulso neutro:** 1520μs
+- **Viagem total:** ±500μs (1020μs a 2020μs)
+- **Torque:** 1.8kg/cm @ 5V
+- **Consumo:** ~150mA em movimento, ~10mA parado
+
+---
+
+## 🛡️ 6. Sistema de Estabilização A3v2
+
+### Conexão A3v2 → Receptor (via i-Bus)
+
+```
+┌──────────────────────────────┐
+│  Controlador A3v2            │
+├──────────────────────────────┤
+│ Alimentação:                 │
+│  • VCC: 5-7.4V (do BEC)     │
+│  • GND: Terra comum          │
+├──────────────────────────────┤
+│ Interface i-Bus:             │
+│  • i-Bus OUT → RX i-Bus IN   │
+│  (Comunicação bidirecional)  │
+├──────────────────────────────┤
+│ Sensores Internos:           │
+│  • Giroscópio: ±2000 dps     │
+│  • Acelerômetro: ±4g         │
+└──────────────────────────────┘
+```
+
+### Cabo i-Bus (4 fios):
+
+```
+A3v2 i-Bus ←→ Receptor i-Bus
+    │
+    ├─── Vermelho (+5V) ──→ Receptor i-Bus (+)
+    ├─── Preto (GND) ─────→ Receptor i-Bus (-)
+    ├─── Amarelo (TX) ────→ Receptor i-Bus (RX)
+    └─── Verde (RX) ──────→ Receptor i-Bus (TX)
+```
+
+**Protocolo i-Bus:**
+- **Velocidade:** 115200 baud
+- **Tipo:** Serial half-duplex
+- **Função:** 
+  - Recebe dados dos canais do receptor
+  - Envia dados de telemetria (giroscópio, acelerômetro)
+  - Controla modos de voo
+  - Ajusta ganhos de estabilização
+
+**Mapeamento de Canais no A3v2:**
+- **CH5:** Seleção de modo de voo
+  - PWM < 1300μs: Normal
+  - PWM 1300-1600μs: Auto-balanceamento
+  - PWM 1600-1900μs: Auto-pairar
+  - PWM > 1900μs: Girar
+- **CH6:** Ajuste de ganho (sensibilidade)
+
+---
+
+## 🔄 7. Fluxo de Sinais Completo
+
+```
+┌──────────────┐
+│ Transmissor  │ 
+│ FS-i6X       │
+│ (2.4GHz)     │
+└──────┬───────┘
+       │ AFHDS2A
+       │ (140 canais)
+       ▼
+┌──────────────┐         i-Bus          ┌──────────────┐
+│  Receptor    │◄──────────────────────►│ Controlador  │
+│  FS-iA6B     │   (telemetria bidirecional)  A3v2      │
+│              │                        │ (Giroscópio) │
+└──────┬───────┘                        └──────────────┘
+       │
+       ├─────► CH1 ─────► Servo 1 (Aileron D)
+       │                      ▲
+       │                      │ Estabilização
+       ├─────► CH2 ─────► Servo 2 (Profundor)
+       │                      ▲
+       │                      │
+       ├─────► CH3 ─────► ESC ─────► Motor BLDC
+       │                              │
+       │                              └─────► Hélice
+       │
+       └─────► CH4 ─────► Servo 3 (Aileron E)
+                              ▲
+                              │ Estabilização
+```
+
+---
+
+## ⚙️ 8. Configuração do A3v2
+
+### Modos de Operação e Frequências
+
+O A3v2 pode ser configurado para trabalhar com diferentes frequências PWM para os servos:
+
+| Frequência | Período | Aplicação | Vantagem |
+|------------|---------|-----------|----------|
+| **50Hz** | 20ms | Servos analógicos | Compatibilidade universal |
+| **125Hz** | 8ms | Servos digitais | Resposta mais rápida |
+| **250Hz** | 4ms | Servos digitais rápidos | Máxima performance |
+
+**Recomendação para servos 9g:** 50Hz (padrão)
+
+### Tipos de Asa Configuráveis:
+
+```
+1. PADRÃO (Normal)
+   - Ailerons separados (CH1 e CH4)
+   - Profundor dedicado (CH2)
+   
+2. DELTA (Flying Wing)
+   - Elevons misturados
+   - CH1/CH4: Pitch + Roll
+   
+3. V-TAIL
+   - Ruddervators misturados
+   - CH2/CH4: Pitch + Yaw
+```
+
+**Para Simple Stick:** Usar configuração **PADRÃO**
+
+---
+
+## 🔧 9. Esquema de Ligação Passo a Passo
+
+### Ordem de Montagem Recomendada:
+
+#### Passo 1: Alimentação Principal
+```
+1. Soldar conector T na bateria LiPo (se necessário)
+2. Conectar bateria ao ESC (vermelho +, preto -)
+3. ⚠️ NÃO conectar bateria ainda (apenas preparar)
+```
+
+#### Passo 2: Motor
+```
+1. Soldar conectores banana 3.5mm nos fios do motor
+2. Conectar os 3 fios azuis do ESC ao motor
+3. Fixar motor no bico com 4 parafusos M3
+4. Instalar hélice (sentido horário)
+```
+
+#### Passo 3: BEC e Receptor
+```
+1. Conectar cabo BEC do ESC ao receptor:
+   - CH3 (Throttle): Vermelho +5V, Preto GND, Branco PWM
+2. Verificar polaridade (vermelho sempre no centro)
+3. Fixar receptor na fuselagem com velcro dupla face
+```
+
+#### Passo 4: Servos
+```
+1. Servo Aileron Direito → Receptor CH1
+2. Servo Profundor → Receptor CH2
+3. Servo Aileron Esquerdo → Receptor CH4
+4. Verificar que todos os fios vermelhos estão no pino central
+```
+
+#### Passo 5: Controlador A3v2
+```
+1. Conectar cabo i-Bus:
+   A3v2 i-Bus ←→ Receptor porta i-Bus
+   (4 fios: Vermelho, Preto, Amarelo, Verde)
+2. Fixar A3v2 centralizado na fuselagem
+3. Alinhar eixos com o avião (seta para frente)
+```
+
+#### Passo 6: Configuração Final
+```
+1. Ligar transmissor FS-i6X
+2. Conectar bateria LiPo
+3. Aguardar beeps do ESC
+4. Verificar LEDs do receptor (verde = link OK)
+5. Calibrar A3v2 (seguir manual - superfície nivelada)
+6. Testar todos os controles
+```
+
+---
+
+## 📊 10. Tabela de Consumo de Corrente
+
+| Componente | Corrente Idle | Corrente Máxima | Fonte |
+|------------|---------------|-----------------|-------|
+| Motor BLDC | 1.8A | 22A | Bateria 11.1V |
+| ESC (perdas) | 0.2A | 0.5A | Bateria 11.1V |
+| Receptor FS-iA6B | 50mA | 80mA | BEC 5V |
+| Controlador A3v2 | 100mA | 150mA | BEC 5V |
+| Servo 1 (parado) | 10mA | 500mA | BEC 5V |
+| Servo 2 (parado) | 10mA | 500mA | BEC 5V |
+| Servo 3 (parado) | 10mA | 500mA | BEC 5V |
+| **TOTAL BEC** | **~200mA** | **~2A** | BEC 5V/3A |
+| **TOTAL BATERIA** | **~2A** | **~22.5A** | LiPo 3S |
+
+**Autonomia estimada:**
+- Voo econômico (50% throttle): ~15 minutos
+- Voo normal (70% throttle): ~10 minutos
+- Voo agressivo (100% throttle): ~6 minutos
+
+---
+
+## 🛡️ 11. Proteções e Segurança
+
+### ESC - Proteções Internas:
+- **Low Voltage Cutoff (LVC):** Corta motor em 9.0V (3.0V/célula)
+- **Thermal Protection:** Desliga em superaquecimento
+- **Overcurrent:** Limita em 55A (pico)
+
+### BEC - Proteções:
+- **Regulação linear:** Dissipa excesso como calor
+- **Limite de corrente:** 3A máximo
+- **⚠️ Cuidado:** Se ultrapassar 3A, pode resetar receptor
+
+### Bateria LiPo - Cuidados:
+- **Nunca descarregar abaixo de 3.0V/célula**
+- **Armazenar em 3.8V/célula (11.4V total)**
+- **Carregar em modo balanceado**
+- **Temperatura de operação:** 0-45°C
+
+---
+
+## 🔍 12. Testes de Bancada (Checklist)
+
+### Antes do primeiro voo:
+
+```
+□ 1. Verificar polaridade de TODOS os conectores
+□ 2. Testar continuidade com multímetro
+□ 3. Conectar bateria SEM hélice
+□ 4. Verificar tensão: ~11.1V na bateria
+□ 5. Verificar tensão: ~5.0V no BEC
+□ 6. Testar link rádio (LED verde aceso)
+□ 7. Testar movimento de todos os servos
+□ 8. Verificar sentido de rotação dos servos
+□ 9. Calibrar neutros dos servos
+□ 10. Testar ESC (acelerar suavemente)
+□ 11. Verificar sentido de rotação do motor
+□ 12. Calibrar A3v2 (superfície nivelada)
+□ 13. Testar modos de voo do A3v2
+□ 14. Verificar temperatura dos componentes
+□ 15. Instalar hélice (último passo)
+```
+
+---
+
+## ⚡ 13. Diagrama Elétrico Simplificado
+
+```
+                    BATERIA LiPo 3S
+                    11.1V / 2200mAh
+                          │
+                    ┌─────┴─────┐
+                    │           │
+                ┌───▼────┐  ┌───▼────────────────┐
+                │  ESC   │  │   Receptor         │
+                │  40A   │  │   FS-iA6B          │
+                │        │  │   (4-6.5V)         │
+                │ BEC 5V │──►                    │
+                │  3A    │  │   CH1 CH2 CH3 CH4  │
+                └───┬────┘  └────┬───┬───┬───┬───┘
+                    │            │   │   │   │
+              ┌─────▼────┐       │   │   │   │
+              │  Motor   │       │   │   │   │
+              │  BLDC    │       │   │   │   │
+              │ A2212/6T │       │   │   │   │
+              └──────────┘       │   │   │   │
+                                 │   │   │   └─────┐
+                        ┌────────┘   │   │         │
+                        │   ┌────────┘   │         │
+                        │   │   ┌────────┘         │
+                        │   │   │                  │
+                    ┌───▼┐┌─▼─┐┌▼──┐          ┌───▼────┐
+                    │Srv1││Srv││Srv3│          │  A3v2  │
+                    │9g  ││2  ││9g  │          │Gyro+Ac │
+                    └────┘│9g │└────┘          └────────┘
+                          └───┘                     ▲
+                                                    │
+                              i-Bus ────────────────┘
+```
+
+---
+
+## 📋 14. Lista de Materiais para Fiação
+
+| Item | Quantidade | Especificação |
+|------|-----------|---------------|
+| Cabo servo 3 vias | 3 | 30cm cada (extensão se necessário) |
+| Cabo i-Bus | 1 | 20cm (4 vias) |
+| Conector T (Deans) | 1 par | Macho/fêmea |
+| Conector banana 3.5mm | 3 | Para motor |
+| Termo-retrátil | 1m | Diversos diâmetros |
+| Velcro dupla face | 50cm | Para fixar componentes |
+| Zip-ties | 10 | Pequenos (100mm) |
+| Espaguete termo-retrátil | 1m | Proteção de cabos |
+
+---
+
+Este diagrama completo permite a montagem segura e funcional de todo o sistema elétrico do AeroFlyControl v1! 🚁
