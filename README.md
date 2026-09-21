@@ -177,6 +177,10 @@ BEC 5V/3A do ESC ──► Alimenta Receptor + Controlador + Servos
 - [x] Teste da interface i-Bus
 
 ---
+## ✅ Implementações Futuras
+- [ ] Checar maturidade de projeto: https://imatec.aeb.gov.br/#/home
+- [ ] Fazer o CFD ou Simulação Computacional da Aerodinâmica
+- [ ] Elaboração/Confeccionar PCB do aeromodelo e controle remoto
 
 ## 🔋 Cuidados com a Bateria LiPo
 
